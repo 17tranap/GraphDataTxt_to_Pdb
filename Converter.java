@@ -42,8 +42,6 @@ public class Converter() {
     JTextField inputOpt3 = new JTextField("",10);  
     
     JLabel fi1 = null;
-    JLabel fi2 = null;
-    
 
     public static ArrayList<dist> topList;
 	Calculator() {
@@ -80,7 +78,7 @@ public class Converter() {
             			curArgs[0]= jfc.getSelectedFile().getAbsolutePath();
             			txtName = jfc.getSelectedFile().getName();
             			
-            			fi1 = new JLabel(pdbName1);
+            			fi1 = new JLabel(txtName);
             			
             			row[0].add(fi1);
             			add(row[0]);
@@ -117,6 +115,10 @@ public class Converter() {
                 try{
                 	PrintWriter pw = new PrintWriter(new FileWriter("Txt_to_pdb_" + txtName + ".txt", false));
                 	pw.println("This is the .pdb file to be printed to");
+
+                	try{
+                		printToFile(txtName, pw);
+                	}
 
                     System.out.println("write done");
 
@@ -171,5 +173,22 @@ public class Converter() {
             add(row[i]);
         } 
         setVisible(true);
+    }
+
+    public static void printToFile(String txtName, Printwriter pw) {
+    	try {
+    		File pdbfile = new File (pdb1);
+            Scanner s = new Scanner (pdbfile);
+
+            int atomNum = 1;
+
+            while(s.hasNextLine()) {
+            	String line = s.nextLine();
+            	String residue1 = line.substring(0, s.firstIndexOf());
+            	line = line.substring(s.firstIndexOf()+1);
+            	String residue2 = line.substring(0, s.firstIndexOf());
+            	pw.println("ATOM\t" + atomNum + "\t" + "H\tASP\t1\t" + residue1 + "\t" + residue2);
+            }
+    	}
     }
 }
