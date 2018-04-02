@@ -156,7 +156,8 @@ public class Converter extends JFrame{
                 try {
                     int res1 = Integer.parseInt(residue1);
                     int res2 = Integer.parseInt(residue2);
-                	pw.println("HETATM\t" + atomNum + "\t" + "H\tOAA A\t1\t" + (res1/3) + "\t" + (res2/3) + "\n");
+                    //scaling needs work to be dynamic
+                	pw.println("HETATM\t" + atomNum + "\t" + "H\tOAA A\t1\t" + (res1/3) + "\t" + (res2/3) + "\n"); 
                     atomNum++;
                 }
                 catch (NumberFormatException e) {
