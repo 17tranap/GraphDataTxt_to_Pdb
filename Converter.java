@@ -1,5 +1,6 @@
 /**
- * For the purposes of the Radic Lab: program takes contents of a .txt file
+ * For the purposes of the Radic Lab: program takes contents of a .txt file 
+ * through a GUI that allows user to pick file from file picker, takes data points,
  * and prints them to a pdb file in a format readable to 3D visualizers
  * such that the data points are the first two columns of the .txt with the
  * first as the X coordinate and the second as a Y coordinate
@@ -18,6 +19,7 @@ import javafx.stage.*;
 import java.util.*;
 import java.util.List;
 import java.io.*;
+import java.io.PrintWriter;
 import java.lang.Number;
 import java.lang.Math;
 import javax.swing.border.*;
@@ -51,7 +53,7 @@ public class Converter extends JFrame{
 
 	Converter() {
         super(".txt Data Points to .pdb Format Converter");
-        setDesign();
+        //super.setDesign();
         setSize(500, 500);
         setResizable(true);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -141,7 +143,7 @@ public class Converter extends JFrame{
         setVisible(true);
     }
 
-    public static void printPointsToFile(String txtName, Printwriter pw) {
+    public static void printPointsToFile(String txtName, PrintWriter pw) {
     	try {
     		File txtFile = new File (txtName);
             Scanner s = new Scanner (txtFile);
@@ -174,7 +176,7 @@ public class Converter extends JFrame{
         }
     }
 
-    public static void printAxesToFile(Printwriter pw, int atomNum) {
+    public static void printAxesToFile(PrintWriter pw, int atomNum) {
         try{
             int x = 0;
             while(x < numResidues/3) {
