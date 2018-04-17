@@ -24,13 +24,16 @@ import java.lang.Number;
 import java.lang.Math;
 import javax.swing.border.*;
 import javax.swing.filechooser.FileSystemView;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 import java.lang.Object;
 
 
 public class Converter extends JFrame{
 	public static String txtName;
-    public static int numResidues;
+    public static int numResidues = -1;
+    public static final int scaleFactor = 10;
+    public static Scanner txtFile = null;
 
 	JPanel[] row = new JPanel[15];
     int[] dimW = {300,45,100,90};
@@ -74,7 +77,7 @@ public class Converter extends JFrame{
             @Override
             public void actionPerformed(ActionEvent event) {
 
-            		JFileChooser jfc = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
+            		/*JFileChooser jfc = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
             		File workingDirectory = new File(System.getProperty("user.dir"));
             		jfc.setCurrentDirectory(workingDirectory);
 
@@ -90,7 +93,17 @@ public class Converter extends JFrame{
             			row[0].add(infileName);
             			add(row[0]);
             			setVisible(true);
-            		}     
+            		}    */
+                    JFileChooser chooser = new JFileChooser(FileSystemView.getFileSystemView());
+                    FileNameExtensionFilter filter = new FileNameExtensionFilter(
+                        ".txt files", "txt");
+                    chooser.setFileFilter(filter);
+                    int returnVal = chooser.showOpenDialog(null);
+                    if(returnVal == JFileChooser.APPROVE_OPTION) {
+                       System.out.println("You chose to open this file: " +
+                            chooser.getSelectedFile().getName());
+                       txtFile = new Scanner(chooser.getSelectedFile());
+                    } 
             }
         }); 
 
@@ -100,25 +113,22 @@ public class Converter extends JFrame{
             	
                 try{
                 	PrintWriter pw = new PrintWriter(new FileWriter("Txt_to_pdb_" + txtName + ".txt", false));
-                	pw.println("This is the .pdb file to be printed to");
+
                     try {
                         String numRes = inputNumResidues.getText();
                         numResidues = Integer.parseInt(numRes);
-                        printPointsToFile(txtName, pw);
                     }
                     catch(NumberFormatException e) {
                         System.exit(-1);
                     }
 
-                	printPointsToFile(txtName, pw);
+                	printPointsToFile(txtFile, pw, numResidues);
+                    pw.close();
                     System.out.println("write done");
                 } 
                 catch (IOException e) {                	
                     System.exit(-1);
-                }
-                finally{
-                        pw.close();
-                }   
+                } 
             }
         });   
 
@@ -143,62 +153,122 @@ public class Converter extends JFrame{
         setVisible(true);
     }
 
-    public static void printPointsToFile(String txtName, PrintWriter pw) {
-    	try {
-    		File txtFile = new File (txtName);
-            Scanner s = new Scanner (txtFile);
+    public static void printPointsToFile(Scanner s, PrintWriter writer, int numResidues) {
+        int atomNum = 1;
 
-            int atomNum = 1;
+        while(s.hasNextLine()) {
+            String residue1 = "" + (s.nextInt());
+            String residue2 = "" + (s.nextInt());
+            s.nextLine();
 
-            while(s.hasNextLine()) {
-            	String line = s.nextLine();
-            	String residue1 = line.substring(0, line.indexOf(" "));
-            	line = line.substring(line.indexOf(" ")+1);
-            	String residue2 = line.substring(0, line.indexOf(" "));
-                try {
-                    int res1 = Integer.parseInt(residue1);
-                    int res2 = Integer.parseInt(residue2);
-                    //scaling needs work to be dynamic
-                	pw.println("HETATM\t" + atomNum + "\t" + "H\tOAA A\t1\t" + (res1/3) + "\t" + (res2/3) + "\n"); 
-                    atomNum++;
-                }
-                catch (NumberFormatException e) {
-                    System.err.println("Could not print because of unexpected .txt format");
-                    System.exit(-1);
-                }
+            try {
+                double res1 = Double.parseDouble(residue1);
+                double res2 = Double.parseDouble(residue2);
+
+                //scaling needs work to be dynamic
+                writer.println("HETATM" + atomNumRightAlign(""+atomNum) + "  " + "H   OAA A   1    " + 
+                    coordRightAlign(calcPoint(res1)) + coordRightAlign(calcPoint(res2)) + coordRightAlign("0.000") + 
+                    "  1.00  40.00           H"); 
+                atomNum++;
             }
-
-            printAxesToFile(pw, atomNum);
-    	}
-        catch (IOException e){
-            System.err.println("Could not write to file");
-            System.exit(-1);
+            catch (NumberFormatException e) {
+                System.err.println("Could not print because of unexpected .txt format");
+                System.exit(-1);
+            }
         }
+
+        printAxesToFile(writer, atomNum, numResidues);
     }
 
-    public static void printAxesToFile(PrintWriter pw, int atomNum) {
-        try{
-            int x = 0;
-            while(x < numResidues/3) {
-                pw.println("HETATM\t" + atomNum + "\t" + "H\tOAA A\t1\t" + (x/3) + "\t0\t0\t1\t18\tH");
-                x+=1;
-            }
-
-            int y = 0;
-            while(y < numResidues/3) {
-                pw.println("HETATM\t" + atomNum + "\t" + "H\tOAA A\t1\t" + "0\t" +  (y/3) + "\t0\t1\t18\tH");
-                x+=1;
-            }
-
-            /*int z = 0;
-            while(z < ) {
-                pw.println("HETATM\t" + atomNum + "\t" + "H\tOAA A\t1\t" + x/3 + "\t0\t0\t1\t18\tH");
-                x+=1;
-            }*/
+    public static void printAxesToFile(PrintWriter pw, int atomNum, int numResidues) {
+        double x = 0;
+        while(x < numResidues) {
+            pw.println("HETATM" + atomNumRightAlign(""+atomNum) + "  " + "H   OAA X   1    " + 
+                coordRightAlign(calcPoint(x)) + coordRightAlign("0.000") + coordRightAlign("0.000") + 
+                "  1.00  20.00           H");
+            x+=1;
+            atomNum++;
         }
-        catch (IOException e){
-            System.err.println("Could not write axes to file");
-            System.exit(-1);
+
+        double y = 0;
+        while(y < numResidues) {
+            pw.println("HETATM" + atomNumRightAlign(""+atomNum) + "  " + "H   OAA Y   1    " + 
+                coordRightAlign("0.000") + coordRightAlign(calcPoint(y)) + coordRightAlign("0.000") + 
+                "  1.00  20.00           H");
+            y+=1;
+            atomNum++;
         }
+
+        /*double z = 0.0;
+        while(z < numResidues/scaleFactor) {
+            pw.println("HETATM" + atomNumRightAlign(""+atomNum) + "  " + "H  OAA A\t1" + 
+                coordRightAlign("0.000") + coordRightAlign("0.000") + coordRightAlign(calcPoint(z)) + 
+                "  1.00  40.00           H");
+            z+=1;
+            atomNum++;
+        }*/
+    }
+
+    private static String calcPoint(double d) {
+        double value = d/scaleFactor;
+        return "" + String.format("%.03f", value);
+    }
+
+    private static String atomNumRightAlign(String s) {
+        int l = s.length();
+        int toInsert = 0;
+        switch(l) {
+            case(1):
+                toInsert = 4;
+                break;
+            case(2):
+                toInsert = 3;
+                break;
+            case(3):
+                toInsert = 2;
+                break;
+            case(4):
+                toInsert = 1;
+                break;
+            case(5):
+                toInsert = 0;
+                break;
+        }
+        for(int i = 0; i < toInsert; i++) {
+            s = " " + s;
+        }
+        return s;
+    }
+
+    private static String coordRightAlign(String s) {
+        int l = s.length();
+        int toInsert = 0;
+        switch(l) {
+            case(1):
+                toInsert = 7;
+                break;
+            case(2):
+                toInsert = 6;
+                break;
+            case(3):
+                toInsert = 5;
+                break;
+            case(4):
+                toInsert = 4;
+                break;
+            case(5):
+                toInsert = 3;
+                break;
+            case(6):
+                toInsert = 2;
+                break;
+            case(7):
+                toInsert = 1;
+                break;
+        }
+        for(int i = 0; i < toInsert; i++) {
+            s = " " + s;
+        }
+        return s;
     }
 }
