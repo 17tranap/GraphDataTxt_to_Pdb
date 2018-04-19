@@ -35,13 +35,7 @@ public class Converter extends JFrame{
     public static final int scaleFactor = 10;
     public static Scanner txtFile = null;
 
-	JPanel[] row = new JPanel[15];
-    int[] dimW = {300,45,100,90};
-    int[] dimH = {35, 50};
-    Dimension displayDimension = new Dimension(dimW[0], dimH[0]);
-    Dimension regularDimension = new Dimension(dimW[0], dimH[1]);
-    Dimension rColumnDimension = new Dimension(dimW[2], dimH[1]);
-    Dimension zeroButDimension = new Dimension(dimW[3], dimH[1]);
+	JPanel[] row = new JPanel[8];
 
     static JButton convertButton = new JButton("Convert");
     static JButton uploadFileButton = new JButton("Upload txt file");
@@ -50,59 +44,47 @@ public class Converter extends JFrame{
     Font font = new Font("Times new Roman", Font.BOLD, 14);
 
     JTextField inputNumResidues = new JTextField("",10);   
-    JLabel infileName = null;
+    JLabel infileName = new JLabel("");
 
     String[] curArgs = new String[3];
 
 	Converter() {
         super(".txt Data Points to .pdb Format Converter");
-        //super.setDesign();
         setSize(500, 500);
         setResizable(true);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-        GridLayout grid = new GridLayout(7,5);
+        GridLayout grid = new GridLayout(8,3, 0, 1);
         setLayout(grid);
 
         
         FlowLayout f1 = new FlowLayout(FlowLayout.CENTER);
         FlowLayout f2 = new FlowLayout(FlowLayout.CENTER,1,1);
-        for(int i = 0; i < 15; i++)
+        for(int i = 0; i < 8; i++)
             row[i] = new JPanel();
-        for(int i = 0; i < 14; i++)
+        for(int i = 0; i < 7; i++)
             row[i].setLayout(f2);
 
-        row[14].setLayout(f1);
+        row[7].setLayout(f1);
 
         uploadFileButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent event) {
 
-            		/*JFileChooser jfc = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
-            		File workingDirectory = new File(System.getProperty("user.dir"));
-            		jfc.setCurrentDirectory(workingDirectory);
-
-            		int returnValue = jfc.showOpenDialog(null);
-
-            		if (returnValue == JFileChooser.APPROVE_OPTION) {
-            			
-            			curArgs[0]= jfc.getSelectedFile().getAbsolutePath();
-            			txtName = jfc.getSelectedFile().getName();
-            			
-            			infileName = new JLabel(txtName);
-            			
-            			row[0].add(infileName);
-            			add(row[0]);
-            			setVisible(true);
-            		}    */
                     JFileChooser chooser = new JFileChooser(FileSystemView.getFileSystemView());
                     FileNameExtensionFilter filter = new FileNameExtensionFilter(
                         ".txt files", "txt");
                     chooser.setFileFilter(filter);
                     int returnVal = chooser.showOpenDialog(null);
                     if(returnVal == JFileChooser.APPROVE_OPTION) {
-                       System.out.println("You chose to open this file: " +
-                            chooser.getSelectedFile().getName());
-                       txtFile = new Scanner(chooser.getSelectedFile());
+                        txtName = chooser.getSelectedFile().getName();
+                        infileName.setText(txtName);
+                        try {
+                            txtFile = new Scanner(chooser.getSelectedFile());
+                            
+                        } catch(IOException e) {
+                            System.exit(-1);
+                        }
+
                     } 
             }
         }); 
@@ -143,11 +125,11 @@ public class Converter extends JFrame{
         uploadFileButton.setBorder(compound);
         convertButton.setBorder(compound);
         
-        row[2].add(uploadFileButton);
-  
-        row[12].add(convertButton);
+        row[3].add(uploadFileButton);
+        row[3].add(infileName);
+        row[6].add(convertButton);
 
-        for(int i=2;i<14;i++){
+        for(int i=2;i<7;i++){
             add(row[i]);
         } 
         setVisible(true);
@@ -270,5 +252,9 @@ public class Converter extends JFrame{
             s = " " + s;
         }
         return s;
+    }
+
+    public static void main(String[] args) {
+        Converter runner = new Converter();
     }
 }

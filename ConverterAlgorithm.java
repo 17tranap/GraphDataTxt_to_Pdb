@@ -20,7 +20,7 @@ public class ConverterAlgorithm {
     public static void main(String[] args) {
     	Scanner userChoices = new Scanner(System.in);
         System.out.println("First make sure that the file to convert is in the same folder as this app.\n" +
-            "Output file will also be made in the folder" +
+            "Output file will also be made in the folder. " +
         	"Please enter the name of the file you wish to convert: ");
         String infileName = userChoices.nextLine();
         System.out.println("Please enter the total number of residues: ");
@@ -54,6 +54,7 @@ public class ConverterAlgorithm {
         	printPointsToFile(txtFileReader, writer, numResidues);
         	writer.flush();
         	txtFileReader.close();
+        	System.out.println("Conversion has been completed. \n.pdb file should now be in the same folder as this program.");
         } catch (IOException e){
             System.err.println("Could not write file");
             System.exit(-1);
@@ -75,13 +76,13 @@ public class ConverterAlgorithm {
 		int atomNum = 1;
 
 		while(s.hasNextLine()) {
-			String residue1 = "" + (s.nextInt());
-			String residue2 = "" + (s.nextInt());
+			double res1 = s.nextDouble();
+			double res2 = s.nextDouble();
 			s.nextLine();
 
 		    try {
-		        double res1 = Double.parseDouble(residue1);
-		        double res2 = Double.parseDouble(residue2);
+		        //double res1 = Double.parseDouble(residue1);
+		        //double res2 = Double.parseDouble(residue2);
 
 		        //scaling needs work to be dynamic
 		    	writer.println("HETATM" + atomNumRightAlign(""+atomNum) + "  " + "H   OAA A   1    " + 
