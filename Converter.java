@@ -43,28 +43,34 @@ public class Converter extends JFrame{
     
     Font font = new Font("Times new Roman", Font.BOLD, 14);
 
-    JTextField inputNumResidues = new JTextField("",10);   
-    JLabel infileName = new JLabel("");
+    public static JLabel numResLabel = new JLabel("Enter size of x and y axes here: ");
+    public static JTextField inputNumResidues = new JTextField("",10);   
+    public static JLabel infileName = new JLabel("");
+
+    public static JComboBox<String> columnOptions = new JComboBox<String>();
+    public static JLabel choicesLabel = new JLabel("Pick the column you want for the Z axis: ");
+
+
 
     String[] curArgs = new String[3];
 
 	Converter() {
         super(".txt Data Points to .pdb Format Converter");
-        setSize(500, 500);
+        setSize(400, 300);
         setResizable(true);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-        GridLayout grid = new GridLayout(8,3, 0, 1);
+        GridLayout grid = new GridLayout(6,3, 0, 10);
         setLayout(grid);
 
         
-        FlowLayout f1 = new FlowLayout(FlowLayout.CENTER);
+        FlowLayout f1 = new FlowLayout(FlowLayout.LEADING);
         FlowLayout f2 = new FlowLayout(FlowLayout.CENTER,1,1);
-        for(int i = 0; i < 8; i++)
+        for(int i = 0; i < 6; i++)
             row[i] = new JPanel();
-        for(int i = 0; i < 7; i++)
-            row[i].setLayout(f2);
+        for(int i = 0; i < 5; i++)
+            row[i].setLayout(f1);
 
-        row[7].setLayout(f1);
+        row[5].setLayout(f2);
 
         uploadFileButton.addActionListener(new ActionListener() {
             @Override
@@ -80,7 +86,7 @@ public class Converter extends JFrame{
                         infileName.setText(txtName);
                         try {
                             txtFile = new Scanner(chooser.getSelectedFile());
-                            
+                            getColumnOptions(txtFile);
                         } catch(IOException e) {
                             System.exit(-1);
                         }
@@ -94,7 +100,9 @@ public class Converter extends JFrame{
             public void actionPerformed(ActionEvent event) {
             	
                 try{
-                	PrintWriter pw = new PrintWriter(new FileWriter("Txt_to_pdb_" + txtName + ".txt", false));
+                	PrintWriter pw = new PrintWriter(
+                        new FileWriter("Txt_to_pdb_" + 
+                        txtName.substring(0, txtName.length()-4) + ".pdb", false));
 
                     try {
                         String numRes = inputNumResidues.getText();
@@ -105,6 +113,7 @@ public class Converter extends JFrame{
                     }
 
                 	printPointsToFile(txtFile, pw, numResidues);
+                    pw.flush();
                     pw.close();
                     System.out.println("write done");
                 } 
@@ -119,20 +128,33 @@ public class Converter extends JFrame{
         convertButton.setForeground(Color.BLACK);
         convertButton.setBackground(Color.WHITE);
 
-        Border line = new LineBorder(Color.BLACK);
+        Border line = new BevelBorder(1);
         Border margin = new EmptyBorder(5, 15, 5, 15);
         Border compound = new CompoundBorder(line, margin);
         uploadFileButton.setBorder(compound);
         convertButton.setBorder(compound);
         
-        row[3].add(uploadFileButton);
-        row[3].add(infileName);
-        row[6].add(convertButton);
+        row[4].add(choicesLabel);
+        row[4].add(columnOptions);
+        row[2].add(uploadFileButton);
+        row[2].add(infileName);
+        row[3].add(numResLabel);
+        row[3].add(inputNumResidues);
+        row[5].add(convertButton);
 
-        for(int i=2;i<7;i++){
+        for(int i=1;i<6;i++){
             add(row[i]);
         } 
         setVisible(true);
+    }
+
+    public static void getColumnOptions(Scanner s) {
+        String options = s.nextLine();
+        String[] choices = options.split("\t\t");
+        for(int i = 0; i < choices.length; i++){
+            System.out.print((i+1) + ". " + choices[i] + "\n");
+            columnOptions.insertItemAt(choices[i], i);
+        }
     }
 
     public static void printPointsToFile(Scanner s, PrintWriter writer, int numResidues) {
