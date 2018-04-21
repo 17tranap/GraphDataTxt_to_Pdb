@@ -34,6 +34,9 @@ public class Converter extends JFrame{
     public static int numResidues = -1;
     public static final int scaleFactor = 10;
     public static Scanner txtFile = null;
+    public static String[] choices;
+    public static int choiceNum;
+    public static double zMax = 0;
 
 	JPanel[] row = new JPanel[8];
 
@@ -47,8 +50,10 @@ public class Converter extends JFrame{
     public static JTextField inputNumResidues = new JTextField("",10);   
     public static JLabel infileName = new JLabel("");
 
-    public static JComboBox<String> columnOptions = new JComboBox<String>();
+    public static JComboBox columnOptions = new JComboBox();
     public static JLabel choicesLabel = new JLabel("Pick the column you want for the Z axis: ");
+
+    public static JLabel doneLabel = new JLabel("");
 
 
 
@@ -56,7 +61,7 @@ public class Converter extends JFrame{
 
 	Converter() {
         super(".txt Data Points to .pdb Format Converter");
-        setSize(400, 300);
+        setSize(500, 300);
         setResizable(true);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         GridLayout grid = new GridLayout(6,3, 0, 10);
@@ -65,20 +70,23 @@ public class Converter extends JFrame{
         
         FlowLayout f1 = new FlowLayout(FlowLayout.LEADING);
         FlowLayout f2 = new FlowLayout(FlowLayout.CENTER,1,1);
-        for(int i = 0; i < 6; i++)
+        for(int i = 0; i < 6; i++) {
             row[i] = new JPanel();
-        for(int i = 0; i < 5; i++)
-            row[i].setLayout(f1);
+        }
 
+        for(int i = 0; i < 5; i++){
+            row[i].setLayout(f1);
+        }
+        row[1].setLayout(f2);
         row[5].setLayout(f2);
 
         uploadFileButton.addActionListener(new ActionListener() {
-            @Override
+           
             public void actionPerformed(ActionEvent event) {
 
                     JFileChooser chooser = new JFileChooser(FileSystemView.getFileSystemView());
-                    FileNameExtensionFilter filter = new FileNameExtensionFilter(
-                        ".txt files", "txt");
+                    String[] fileFormat = {"txt"};
+                    FileNameExtensionFilter filter = new FileNameExtensionFilter("txt file", fileFormat);
                     chooser.setFileFilter(filter);
                     int returnVal = chooser.showOpenDialog(null);
                     if(returnVal == JFileChooser.APPROVE_OPTION) {
@@ -111,11 +119,17 @@ public class Converter extends JFrame{
                     catch(NumberFormatException e) {
                         System.exit(-1);
                     }
-
+                    String userZChoice = (String)columnOptions.getSelectedItem();
+                    for(int i = 0; i < choices.length; i++) {
+                        if(userZChoice.equals(choices[i])) {
+                            choiceNum = i;
+                        }
+                    }
                 	printPointsToFile(txtFile, pw, numResidues);
                     pw.flush();
                     pw.close();
                     System.out.println("write done");
+                    doneLabel.setText("Done");
                 } 
                 catch (IOException e) {                	
                     System.exit(-1);
@@ -141,6 +155,7 @@ public class Converter extends JFrame{
         row[3].add(numResLabel);
         row[3].add(inputNumResidues);
         row[5].add(convertButton);
+        row[1].add(doneLabel);
 
         for(int i=1;i<6;i++){
             add(row[i]);
@@ -150,9 +165,8 @@ public class Converter extends JFrame{
 
     public static void getColumnOptions(Scanner s) {
         String options = s.nextLine();
-        String[] choices = options.split("\t\t");
+        choices = options.split("\t\t");
         for(int i = 0; i < choices.length; i++){
-            System.out.print((i+1) + ". " + choices[i] + "\n");
             columnOptions.insertItemAt(choices[i], i);
         }
     }
@@ -161,17 +175,25 @@ public class Converter extends JFrame{
         int atomNum = 1;
 
         while(s.hasNextLine()) {
-            String residue1 = "" + (s.nextInt());
-            String residue2 = "" + (s.nextInt());
+            String[] inputs = new String[choices.length];
+            for(int i = 0; i < inputs.length; i++) {
+                inputs[i] = "" + s.nextDouble();
+            }
+            //double res1 = s.nextDouble();
+            //double res2 = s.nextDouble();
             s.nextLine();
 
             try {
-                double res1 = Double.parseDouble(residue1);
-                double res2 = Double.parseDouble(residue2);
+                double res1 = Double.parseDouble(inputs[0]);
+                double res2 = Double.parseDouble(inputs[1]);
+                double res3 = Double.parseDouble(inputs[choiceNum]);
+                if (res3 > zMax) {
+                	zMax = res3;
+                }
 
                 //scaling needs work to be dynamic
                 writer.println("HETATM" + atomNumRightAlign(""+atomNum) + "  " + "H   OAA A   1    " + 
-                    coordRightAlign(calcPoint(res1)) + coordRightAlign(calcPoint(res2)) + coordRightAlign("0.000") + 
+                    coordRightAlign(calcPoint(res1)) + coordRightAlign(calcPoint(res2)) + coordRightAlign(roundPoint(res3)) + 
                     "  1.00  40.00           H"); 
                 atomNum++;
             }
@@ -187,35 +209,42 @@ public class Converter extends JFrame{
     public static void printAxesToFile(PrintWriter pw, int atomNum, int numResidues) {
         double x = 0;
         while(x < numResidues) {
-            pw.println("HETATM" + atomNumRightAlign(""+atomNum) + "  " + "H   OAA X   1    " + 
+            pw.println("HETATM" + atomNumRightAlign(""+atomNum) + "  " + "C   OAA X   1    " + 
                 coordRightAlign(calcPoint(x)) + coordRightAlign("0.000") + coordRightAlign("0.000") + 
-                "  1.00  20.00           H");
+                "  1.00  20.00           C");
             x+=1;
             atomNum++;
         }
 
         double y = 0;
         while(y < numResidues) {
-            pw.println("HETATM" + atomNumRightAlign(""+atomNum) + "  " + "H   OAA Y   1    " + 
+            pw.println("HETATM" + atomNumRightAlign(""+atomNum) + "  " + "C   OAA Y   1    " + 
                 coordRightAlign("0.000") + coordRightAlign(calcPoint(y)) + coordRightAlign("0.000") + 
-                "  1.00  20.00           H");
+                "  1.00  20.00           C");
             y+=1;
             atomNum++;
         }
 
-        /*double z = 0.0;
-        while(z < numResidues/scaleFactor) {
-            pw.println("HETATM" + atomNumRightAlign(""+atomNum) + "  " + "H  OAA A\t1" + 
-                coordRightAlign("0.000") + coordRightAlign("0.000") + coordRightAlign(calcPoint(z)) + 
-                "  1.00  40.00           H");
-            z+=1;
+        double z = 0;
+        while(z < zMax) {
+            pw.println("HETATM" + atomNumRightAlign(""+atomNum) + "  " + "C  OAA Z   1    " + 
+                coordRightAlign("0.000") + coordRightAlign("0.000") + coordRightAlign(roundPoint(z)) + 
+                "  1.00  20.00           C");
+            z+=.01;
             atomNum++;
-        }*/
+        }
+    }
+
+    private static String roundPoint(double d) {
+    	Double num = new Double(d*100);
+    	Double[] nums = {num};
+        return "" + String.format("%.03f", nums);
     }
 
     private static String calcPoint(double d) {
-        double value = d/scaleFactor;
-        return "" + String.format("%.03f", value);
+        Double value = new Double(d/scaleFactor);
+        Double[] values = {value};
+        return "" + String.format("%.03f", values);
     }
 
     private static String atomNumRightAlign(String s) {
