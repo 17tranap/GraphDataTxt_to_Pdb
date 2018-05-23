@@ -5,6 +5,8 @@
  * such that the data points are the first two columns of the .txt with the
  * first as the X coordinate and the second as a Y coordinate
  */
+
+//move axis over by coordinate of 2 so that bonds do not form
 import java.awt.*;
 import java.awt.Color;
 import javax.swing.*;
@@ -109,7 +111,7 @@ public class Converter extends JFrame{
             	
                 try{
                 	PrintWriter pw = new PrintWriter(
-                        new FileWriter("Txt_to_pdb_" + 
+                        new FileWriter("g_" + 
                         txtName.substring(0, txtName.length()-4) + ".pdb", false));
 
                     try {
@@ -173,28 +175,60 @@ public class Converter extends JFrame{
 
     public static void printPointsToFile(Scanner s, PrintWriter writer, int numResidues) {
         int atomNum = 1;
+        LinkedList<String[]> rows = new LinkedList();
 
         while(s.hasNextLine()) {
             String[] inputs = new String[choices.length];
             for(int i = 0; i < inputs.length; i++) {
-                inputs[i] = "" + s.nextDouble();
+                inputs[i] = "" + s.next();
             }
-            //double res1 = s.nextDouble();
-            //double res2 = s.nextDouble();
+            
             s.nextLine();
 
             try {
-                double res1 = Double.parseDouble(inputs[0]);
-                double res2 = Double.parseDouble(inputs[1]);
                 double res3 = Double.parseDouble(inputs[choiceNum]);
+
                 if (res3 > zMax) {
-                	zMax = res3;
+                    zMax = res3;
                 }
+            }
+            catch (NumberFormatException e) {
+                System.err.println("Could not print because of unexpected .txt format");
+                System.exit(-1);
+            }
+
+            rows.add(inputs);
+        }
+
+        for(int g = 0; g < rows.size(); g++) {
+        //while(s.hasNextLine()) {
+            /*String[] inputs = new String[choices.length];
+            for(int i = 0; i < inputs.length; i++) {
+                inputs[i] = "" + s.next();
+            }
+            
+            s.nextLine();
+            */
+            try {
+                /*double res1 = Double.parseDouble(inputs[0]);
+                double res2 = Double.parseDouble(inputs[2]);
+                double res3 = Double.parseDouble(inputs[choiceNum]);
+
+                String refResName = inputs[1];
+                String tetherResName = inputs[3];*/
+
+                double res1 = Double.parseDouble(rows.get(g)[0]);
+                double res2 = Double.parseDouble(rows.get(g)[2]);
+                double res3 = Double.parseDouble(rows.get(g)[choiceNum]);
+
+                String refResName = rows.get(g)[1];
+                String tetherResName = rows.get(g)[3];
 
                 //scaling needs work to be dynamic
-                writer.println("HETATM" + atomNumRightAlign(""+atomNum) + "  " + "H   OAA A   1    " + 
+                writer.println("HETATM" + atomNumRightAlign(""+((int)res2)) + "  " + 
+                    oneLetterAminoCode(tetherResName, res2) + refResName + " A"+ resNumRightAlign("" + ((int)res1)) + "    " + 
                     coordRightAlign(calcPoint(res1)) + coordRightAlign(calcPoint(res2)) + coordRightAlign(roundPoint(res3)) + 
-                    "  1.00  40.00           H"); 
+                    "  1.00  " + bFactor(res3) + "           H"); 
                 atomNum++;
             }
             catch (NumberFormatException e) {
@@ -207,32 +241,115 @@ public class Converter extends JFrame{
     }
 
     public static void printAxesToFile(PrintWriter pw, int atomNum, int numResidues) {
-        double x = 0;
-        while(x < numResidues) {
+        double x = -2;
+        atomNum = 1;
+        while(x <= numResidues) {
+            if(x%100 == 0) {
+                pw.println("HETATM" + atomNumRightAlign(""+atomNum) + "  " + "H   OAA B   1    " + 
+                coordRightAlign(calcPoint(x)) + coordRightAlign("-2.000") + coordRightAlign("-2.000") + 
+                "  1.00  20.00           H");
+            }
             pw.println("HETATM" + atomNumRightAlign(""+atomNum) + "  " + "C   OAA X   1    " + 
-                coordRightAlign(calcPoint(x)) + coordRightAlign("0.000") + coordRightAlign("0.000") + 
+                coordRightAlign(calcPoint(x)) + coordRightAlign("-2.000") + coordRightAlign("-2.000") + 
                 "  1.00  20.00           C");
-            x+=1;
+            x+=5;
             atomNum++;
         }
 
-        double y = 0;
-        while(y < numResidues) {
+        atomNum = 1;
+        double y = -2;
+        while(y <= numResidues) {
+            if(y%100 == 0) {
+                pw.println("HETATM" + atomNumRightAlign(""+atomNum) + "  " + "H   OAA C   1    " + 
+                coordRightAlign("-2.000") + coordRightAlign(calcPoint(y)) + coordRightAlign("-2.000") + 
+                "  1.00  20.00           H");    
+            }
             pw.println("HETATM" + atomNumRightAlign(""+atomNum) + "  " + "C   OAA Y   1    " + 
-                coordRightAlign("0.000") + coordRightAlign(calcPoint(y)) + coordRightAlign("0.000") + 
+                coordRightAlign("-2.000") + coordRightAlign(calcPoint(y)) + coordRightAlign("-2.000") + 
                 "  1.00  20.00           C");
-            y+=1;
+            y+=5;
             atomNum++;
         }
 
-        double z = 0;
+        atomNum = 1;
+        double z = -.02;
         while(z < zMax) {
-            pw.println("HETATM" + atomNumRightAlign(""+atomNum) + "  " + "C  OAA Z   1    " + 
-                coordRightAlign("0.000") + coordRightAlign("0.000") + coordRightAlign(roundPoint(z)) + 
+            if(z%1 == 0) {
+                pw.println("HETATM" + atomNumRightAlign(""+atomNum) + "  " + "H   OAA D   1    " + 
+                coordRightAlign("-2.000") + coordRightAlign("-2.000") + coordRightAlign(roundPoint(z)) + 
+                "  1.00  20.00           H");
+            }
+            pw.println("HETATM" + atomNumRightAlign(""+atomNum) + "  " + "C   OAA Z   1    " + 
+                coordRightAlign("-2.000") + coordRightAlign("-2.000") + coordRightAlign(roundPoint(z)) + 
                 "  1.00  20.00           C");
             z+=.01;
             atomNum++;
         }
+    }
+
+    private static String oneLetterAminoCode(String s, double num) {
+        String letter = "Z";
+            if(s.equals("ALA"))
+                letter = "A";
+            if(s.equals("ARG"))
+                letter = "R";
+            if(s.equals("ASN"))
+                letter = "N";
+            if(s.equals("ASP"))
+                letter = "D";
+            if(s.equals("GLY"))
+                letter = "G";
+            if(s.equals("ASX"))
+                letter = "B";
+            if(s.equals("CYS"))
+                letter = "C";
+            if(s.equals("GLU"))
+                letter = "E";
+            if(s.equals("GLN"))
+                letter = "Q";
+            if(s.equals("HIS"))
+                letter = "H";
+            if(s.equals("ILE"))
+                letter = "I";
+            if(s.equals("LEU"))
+                letter = "L";
+            if(s.equals("LYS"))
+                letter = "K";
+            if(s.equals("MET"))
+                letter = "M";
+            if(s.equals("PHE"))
+                letter = "F";
+            if(s.equals("PRO"))
+                letter = "P";
+            if(s.equals("SER"))
+                letter = "S";
+            if(s.equals("THR"))
+                letter = "T";
+            if(s.equals("TRP"))
+                letter = "W";
+            if(s.equals("TYR"))
+                letter = "Y";
+            if(s.equals("VAL"))
+                letter = "V";
+
+        String n = "" + (int)num;
+        int numLength = n.length();
+        int toInsert = 0;
+        switch(numLength) {
+            case(1):
+                toInsert = 2;
+                break;
+            case(2):
+                toInsert = 1;
+                break;
+            case(3):
+                toInsert = 0;
+                break;
+        }
+        for(int i = 0; i < toInsert; i++) {
+            n = "0" + n;
+        }
+        return letter+n;
     }
 
     private static String roundPoint(double d) {
@@ -245,6 +362,39 @@ public class Converter extends JFrame{
         Double value = new Double(d/scaleFactor);
         Double[] values = {value};
         return "" + String.format("%.03f", values);
+    }
+
+    private static String bFactor(double d) {
+        Double num = d/zMax*40;
+        Double[] nums = {num};
+        String s =  "" + String.format("%.02f", nums);
+        if(s.length() < 5) {
+            s = " " + s;
+        }
+        return s;
+    }
+
+    private static String resNumRightAlign(String s) {
+        int l = s.length();
+        int toInsert = 0;
+        switch(l) {
+            case(1):
+                toInsert = 3;
+                break;
+            case(2):
+                toInsert = 2;
+                break;
+            case(3):
+                toInsert = 1;
+                break;
+            case(4):
+                toInsert = 0;
+                break;
+        }
+        for(int i = 0; i < toInsert; i++) {
+            s = " " + s;
+        }
+        return s;
     }
 
     private static String atomNumRightAlign(String s) {
@@ -306,6 +456,6 @@ public class Converter extends JFrame{
     }
 
     public static void main(String[] args) {
-        Converter runner = new Converter();
+        new Converter();
     }
 }
