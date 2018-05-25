@@ -225,11 +225,17 @@ public class Converter extends JFrame{
                 String tetherResName = rows.get(g)[3];
 
                 //scaling needs work to be dynamic
-                writer.println("HETATM" + atomNumRightAlign(""+((int)res2)) + "  " + 
+                /*writer.println("HETATM" + atomNumRightAlign(""+((int)res2)) + "  " + 
                     oneLetterAminoCode(tetherResName, res2) + refResName + " A"+ resNumRightAlign("" + ((int)res1)) + "    " + 
                     coordRightAlign(calcPoint(res1)) + coordRightAlign(calcPoint(res2)) + coordRightAlign(roundPoint(res3)) + 
+                    "  1.00  " + bFactor(res3) + "           H"); */
+
+
+                writer.println("HETATM" + atomNumRightAlign(""+((int)res1)) + "   " +
+                    oneLetterAminoCode(tetherResName) + " " + refResName + " A"+ resNumRightAlign("" + ((int)res2)) + "    " + 
+                    coordRightAlign(calcPoint(res1)) + coordRightAlign(calcPoint(res2)) + coordRightAlign(roundPoint(res3)) + 
                     "  1.00  " + bFactor(res3) + "           H"); 
-                atomNum++;
+       
             }
             catch (NumberFormatException e) {
                 System.err.println("Could not print because of unexpected .txt format");
@@ -242,9 +248,9 @@ public class Converter extends JFrame{
 
     public static void printAxesToFile(PrintWriter pw, int atomNum, int numResidues) {
         double x = -2;
-        atomNum = 1;
+        atomNum = 0;
         while(x <= numResidues) {
-            if(x%100 == 0) {
+            if(atomNum%10 == 0) {
                 pw.println("HETATM" + atomNumRightAlign(""+atomNum) + "  " + "H   OAA B   1    " + 
                 coordRightAlign(calcPoint(x)) + coordRightAlign("-2.000") + coordRightAlign("-2.000") + 
                 "  1.00  20.00           H");
@@ -256,10 +262,10 @@ public class Converter extends JFrame{
             atomNum++;
         }
 
-        atomNum = 1;
+        atomNum = 0;
         double y = -2;
         while(y <= numResidues) {
-            if(y%100 == 0) {
+            if(atomNum%10 == 0) {
                 pw.println("HETATM" + atomNumRightAlign(""+atomNum) + "  " + "H   OAA C   1    " + 
                 coordRightAlign("-2.000") + coordRightAlign(calcPoint(y)) + coordRightAlign("-2.000") + 
                 "  1.00  20.00           H");    
@@ -271,10 +277,10 @@ public class Converter extends JFrame{
             atomNum++;
         }
 
-        atomNum = 1;
+        atomNum = 0;
         double z = -.02;
         while(z < zMax) {
-            if(z%1 == 0) {
+            if(atomNum%10 == 0) {
                 pw.println("HETATM" + atomNumRightAlign(""+atomNum) + "  " + "H   OAA D   1    " + 
                 coordRightAlign("-2.000") + coordRightAlign("-2.000") + coordRightAlign(roundPoint(z)) + 
                 "  1.00  20.00           H");
@@ -287,7 +293,7 @@ public class Converter extends JFrame{
         }
     }
 
-    private static String oneLetterAminoCode(String s, double num) {
+    private static String oneLetterAminoCode(String s) {
         String letter = "Z";
             if(s.equals("ALA"))
                 letter = "A";
@@ -332,7 +338,7 @@ public class Converter extends JFrame{
             if(s.equals("VAL"))
                 letter = "V";
 
-        String n = "" + (int)num;
+        /*String n = "" + (int)num;
         int numLength = n.length();
         int toInsert = 0;
         switch(numLength) {
@@ -349,8 +355,11 @@ public class Converter extends JFrame{
         for(int i = 0; i < toInsert; i++) {
             n = "0" + n;
         }
-        return letter+n;
+        return letter+n;*/
+        return letter;
     }
+
+
 
     private static String roundPoint(double d) {
     	Double num = new Double(d*100);
